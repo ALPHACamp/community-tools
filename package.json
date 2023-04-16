@@ -24,5 +24,9 @@
     "eslint": "^8.38.0",
     "nodemon": "^2.0.22",
     "prettier": "^2.8.7"
+  },
+  "dependencies": {
+    "discord.js": "^14.9.0",
+    "dotenv": "^16.0.3"
   }
 }
