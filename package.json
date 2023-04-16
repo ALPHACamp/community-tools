@@ -1,0 +1,28 @@
+{
+  "name": "community-tools",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "register": "node commands.js",
+    "dev": "nodemon src/app.js",
+    "prettier": "prettier -w src/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ALPHACamp/community-tools.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ALPHACamp/community-tools/issues"
+  },
+  "homepage": "https://github.com/ALPHACamp/community-tools#readme",
+  "devDependencies": {
+    "eslint": "^8.38.0",
+    "nodemon": "^2.0.22",
+    "prettier": "^2.8.7"
+  }
+}
