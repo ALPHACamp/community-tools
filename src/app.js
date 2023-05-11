@@ -1,8 +1,9 @@
 // Require the necessary discord.js classes
-const dotenv = require('dotenv');
-dotenv.config();
-const fs = require('node:fs');
-const path = require('node:path');
+require('dotenv').config();
+const express = require('express');
+const app = express();
+const { readdirSync } = require('node:fs');
+const { join } = require('node:path');
 const {
   Client,
   Collection,
@@ -11,6 +12,8 @@ const {
   EmbedBuilder,
   Partials
 } = require('discord.js');
+const { db } = require('./config/db.js');
+const { FieldValue } = require('firebase-admin/firestore');
 
 const client = new Client({
   intents: [
@@ -23,13 +26,13 @@ const client = new Client({
 
 client.commands = new Collection();
 
-const eventsPath = path.join(__dirname, 'events');
-const eventFiles = fs
-  .readdirSync(eventsPath)
-  .filter((file) => file.endsWith('.js'));
+const eventsPath = join(__dirname, 'events');
+const eventFiles = readdirSync(eventsPath).filter((file) =>
+  file.endsWith('.js')
+);
 
 for (const file of eventFiles) {
-  const filePath = path.join(eventsPath, file);
+  const filePath = join(eventsPath, file);
   const event = require(filePath);
   if (event.once) {
     client.once(event.name, (...args) => event.execute(...args));
@@ -52,26 +55,70 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
   }
 
   if (reaction.emoji.name === '🧡' && reaction.message.author !== user) {
-    const embedMessage = new EmbedBuilder()
-      .setColor('#FFCC39')
-      .setDescription(
-        `太棒了！ 有人覺得這則在 <#${reaction.message.channelId}> 的 [訊息](https://discord.com/channels/${reaction.message.guildId}/${reaction.message.channelId}/${reaction.message.id}) 有幫助，並且送上了一個 🧡`
-      )
-      .addFields({ name: 'From', value: `${user}`, inline: true })
-      .addFields({
-        name: 'To',
-        value: `${reaction.message.author}`,
-        inline: true
-      })
-      .addFields({
-        name: 'Total 🧡',
-        value: `${reaction.count}`,
-        inline: true
-      });
-    const channel = client.channels.cache.get(process.env.CHANNEL_ID);
-    channel.send({ embeds: [embedMessage] });
+    const date = new Date();
+    const yearAndMonth = date.toISOString().slice(0, 7);
+    const collectionName = `leaderboard-${yearAndMonth}`;
+
+    await db.runTransaction(async (t) => {
+      const ref = db
+        .collection(collectionName)
+        .where('discordId', '=', reaction.message.author.id);
+      const snapshot = await t.get(ref);
+      if (snapshot.empty) {
+        t.set(db.collection(`leaderboard-${yearAndMonth}`).doc(), {
+          period: yearAndMonth,
+          discordId: reaction.message.author.id,
+          point: 1
+        });
+      } else {
+        t.update(snapshot.docs[0].ref, { point: FieldValue.increment(1) });
+      }
+
+      const embedMessage = new EmbedBuilder()
+        .setColor('#FFCC39')
+        .setDescription(
+          `太棒了！ 有人覺得這則在 <#${reaction.message.channelId}> 的 [訊息](https://discord.com/channels/${reaction.message.guildId}/${reaction.message.channelId}/${reaction.message.id}) 有幫助，並且送上了一個 🧡`
+        )
+        .addFields({ name: '= require', value: `${user}`, inline: true })
+        .addFields({
+          name: 'To',
+          value: `${reaction.message.author}`,
+          inline: true
+        })
+        .addFields({
+          name: 'Total 🧡',
+          value: `${snapshot.docs[0].data().point + 1}`,
+          inline: true
+        });
+      const channel = client.channels.cache.get(process.env.CHANNEL_ID);
+      channel.send({ embeds: [embedMessage] });
+    });
+  }
+});
+
+// eslint-disable-next-line no-unused-vars
+client.on(Events.MessageReactionRemove, async (reaction, user) => {
+  if (reaction.emoji.name === '🧡' && reaction.message.author !== user) {
+    await db.runTransaction(async (t) => {
+      const date = new Date();
+      const yearAndMonth = date.toISOString().slice(0, 7);
+      const collectionName = `leaderboard-${yearAndMonth}`;
+      const ref = db
+        .collection(collectionName)
+        .where('discordId', '=', reaction.message.author.id);
+      const snapshot = await t.get(ref);
+
+      !snapshot.empty &&
+        t.update(snapshot.docs[0].ref, { point: FieldValue.increment(-1) });
+    });
   }
 });
 
 // Log in to Discord with your client's token
 client.login(process.env.DISCORD_TOKEN);
+
+const apiRoutes = require('./routes/index');
+app.use('/api', apiRoutes);
+app.listen(process.env.PORT || 3306, () => {
+  console.log(`server is running on ${process.env.PORT || 3306}`);
+});
