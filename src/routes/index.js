@@ -45,7 +45,7 @@ router.get('/leaderboard', validate, async function (req, res) {
       .get();
 
     return res.status(200).json({
-      data: querySnapshot.docs.map((doc) => doc.data()),
+      data: querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
       offset,
       pageSize,
       totalPages,
