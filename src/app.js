@@ -14,7 +14,8 @@ const {
 } = require('discord.js');
 const { db } = require('./config/db.js');
 const { FieldValue } = require('firebase-admin/firestore');
-
+const fs = require('fs');
+const path = require('path');
 const client = new Client({
   intents: [
     GatewayIntentBits.Guilds,
@@ -38,6 +39,22 @@ for (const file of eventFiles) {
     client.once(event.name, (...args) => event.execute(...args));
   } else {
     client.on(event.name, (...args) => event.execute(...args));
+  }
+}
+const commandsPath = path.join(__dirname, 'commands/leaderboard');
+const commandFiles = fs
+  .readdirSync(commandsPath)
+  .filter((file) => file.endsWith('.js'));
+
+for (const file of commandFiles) {
+  const filePath = path.join(commandsPath, file);
+  const command = require(filePath);
+  if ('data' in command && 'execute' in command) {
+    client.commands.set(command.data.name, command);
+  } else {
+    console.log(
+      `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
+    );
   }
 }
 
@@ -74,6 +91,10 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
         t.update(snapshot.docs[0].ref, { point: FieldValue.increment(1) });
       }
 
+      const authorTotalPoint = snapshot.docs[0]
+        ? snapshot.docs[0].data().point + 1
+        : 1;
+
       const embedMessage = new EmbedBuilder()
         .setColor('#FFCC39')
         .setDescription(
@@ -87,7 +108,7 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
         })
         .addFields({
           name: 'Total 🧡',
-          value: `${snapshot.docs[0].data().point + 1}`,
+          value: `${authorTotalPoint}`,
           inline: true
         });
       const channel = client.channels.cache.get(process.env.CHANNEL_ID);
