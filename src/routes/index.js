@@ -5,12 +5,12 @@ const { pageSize } = require('../const.js');
 
 function validate(req, res, next) {
   const { date, discordId, page } = req.query;
-  if (page && typeof page != 'number') {
-    return res.status(400).json('page must be number');
+  if (page && typeof Number(page) && Number(page) <= 0) {
+    return res.status(400).json('page must be valid number');
   }
 
   const dateRegex = /([12]\d{3}-(0[1-9]|1[0-2]))/;
-  if (!dateRegex.test(date)) {
+  if (date && !dateRegex.test(date)) {
     return res.status(400).json('date must be in YYYY-MM format');
   }
 
@@ -44,11 +44,32 @@ router.get('/leaderboard', validate, async function (req, res) {
       .offset(offset)
       .get();
 
+    const Discord = require('discord.js');
+    const client = new Discord.Client({
+      intents: []
+    });
+    client.login(process.env.DISCORD_TOKEN);
+
+    const fetchUserDetails = async (doc) => {
+      const data = doc.data();
+      const discordUser = await client.users.fetch(data.discordId);
+      return {
+        id: doc.id,
+        name: discordUser.username,
+        avatarURL: discordUser.displayAvatarURL(),
+        ...data
+      };
+    };
+
+    const promises = querySnapshot.docs.map(fetchUserDetails);
+    const results = await Promise.all(promises);
+
     return res.status(200).json({
-      data: querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })),
+      data: results,
       offset,
       pageSize,
       totalPages,
+      currentPage: page,
       totalDataCount: totalDocsCount
     });
   } catch (err) {
