@@ -1,6 +1,7 @@
 // Require the necessary discord.js classes
 require('dotenv').config();
 const express = require('express');
+var cors = require('cors');
 const app = express();
 const { readdirSync } = require('node:fs');
 const { join } = require('node:path');
@@ -139,7 +140,9 @@ client.on(Events.MessageReactionRemove, async (reaction, user) => {
 client.login(process.env.DISCORD_TOKEN);
 
 const apiRoutes = require('./routes/index');
-app.use('/api', apiRoutes);
+
+app.use('/api', cors(), apiRoutes);
+
 app.listen(process.env.PORT || 3306, () => {
   console.log(`server is running on ${process.env.PORT || 3306}`);
 });
