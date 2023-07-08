@@ -21,6 +21,10 @@ function validate(req, res, next) {
   next();
 }
 
+router.get('/healthCheck', (req, res) => {
+  return res.send('ok');
+});
+
 router.get('/leaderboard', validate, async function (req, res) {
   try {
     const currentYearAndMonth = new Date().toISOString().slice(0, 7);

@@ -8,10 +8,12 @@
     "node": "16.x"
   },
   "scripts": {
-    "start": "node src/app.js",
+    "start": "NODE_ENV=dev pm2 start ecosystem.config.js && pm2 log ac-communityTool-dev --raw",
+    "start:prod": "NODE_ENV=prod pm2 start ecosystem.config.js && pm2 log ac-communityTool-prod --raw",
     "register": "node commands.js",
     "dev": "nodemon src/app.js",
-    "prettier": "prettier -w src/"
+    "prettier": "prettier -w src/",
+    "build": "sh ./sample/shell/build_local.sh"
   },
   "repository": {
     "type": "git",

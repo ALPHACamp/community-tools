@@ -1,3 +1,7 @@
+# package
 node_modules
+
+# sensitive
 .env
 *creds
+sample/shell/build_local.sh
