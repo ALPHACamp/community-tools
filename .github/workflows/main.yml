@@ -70,6 +70,6 @@ jobs:
           # https://docs.github.com/en/packages/learn-github-packages/introduction-to-github-packages#authenticating-to-github-packages
           last_ssh: |
             echo "Start login"
-            echo "${{secrets.GITHUB_PERSONAL_TOKEN}}" | sudo docker login ghcr.io -u ${{env.GITHUB_IDENTITY}} --password-stdin
+            echo "${{secrets.ACCESS_PACKAGE_TOKEN}}" | sudo docker login ghcr.io -u ${{env.GITHUB_IDENTITY}} --password-stdin
             echo "Compose up"
             sudo docker-compose -f ${{env.COMPOSE_FILE_PATH}} up
