@@ -7,3 +7,5 @@ services:
     restart: always
     ports:
       - "8080:8080"
+    volumes:
+      - "./data/logs/pm2:~/.pm2/logs"
