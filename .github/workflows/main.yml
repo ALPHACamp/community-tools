@@ -7,7 +7,8 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-
+  GITHUB_IDENTITY: tim80411
+  COMPOSE_FILE_PATH: /home/deploy/docker-compose.yml
 
 jobs:
   build-and-push-image:
@@ -15,12 +16,16 @@ jobs:
     permissions:
       contents: read
       packages: write
-
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
 
-      # - name: Add Credentials
+      - name: Add Credentials
+        uses: mobiledevops/secret-to-file-action@v1
+        with:
+          base64-encoded-secret: ${{ secrets.FIRESTORE_ACCOUNT }}
+          filename: "firestroe-service-account.json"
+          working-directory: "./creds"
       
       - name: Log in to the container registy
         uses: docker/login-action@v2
@@ -47,6 +52,24 @@ jobs:
             PUBLIC_KEY=${{secrets.PUBLIC_KEY}} 
             DISCORD_GUILDID=${{secrets.DISCORD_GUILDID}} 
             CHANNEL_ID=${{secrets.CHANNEL_ID}} 
-            PORT=${{secrets.PORT}} 
+            PORT=${{secrets.PORT}}
           labels: ${{ steps.meta.outputs.labels }}
 
+  # need: docker@remote
+  ssh-and-run-compose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SCP_COMPOSE_THEN_RUN_DEPLOY
+        uses: cross-the-world/ssh-scp-ssh-pipelines@latest
+        with:
+          host: ${{ secrets.PROD_SSH_DOMAIN }}
+          user: ${{ secrets.PROD_SSH_DEPLOY_USER }}
+          key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+          scp: |
+            ./docker-compose.yml => ${{env.COMPOSE_FILE_PATH}}
+          # https://docs.github.com/en/packages/learn-github-packages/introduction-to-github-packages#authenticating-to-github-packages
+          last_ssh: |
+            echo "Start login"
+            echo "${{secrets.GITHUB_PERSONAL_TOKEN}}" | docker login ghcr.io -u ${{env.GITHUB_IDENTITY}} --password-stdin
+            echo "Compose up"
+            docker-compose -f ${{env.COMPOSE_FILE_PATH}} up
