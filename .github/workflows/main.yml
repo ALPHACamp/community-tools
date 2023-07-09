@@ -8,7 +8,7 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
   GITHUB_IDENTITY: tim80411
-  COMPOSE_FILE_PATH: /home/deploy/docker-compose.yml
+  COMPOSE_FILE_PATH: /home/deploy
 
 jobs:
   build-and-push-image:
@@ -73,4 +73,4 @@ jobs:
             echo "Start login"
             echo "${{secrets.ACCESS_PACKAGE_TOKEN}}" | sudo docker login ghcr.io -u ${{env.GITHUB_IDENTITY}} --password-stdin
             echo "Compose up"
-            sudo docker-compose -f ${{env.COMPOSE_FILE_PATH}} up
+            sudo docker-compose -f ${{env.COMPOSE_FILE_PATH}}/docker-compose.yml up
