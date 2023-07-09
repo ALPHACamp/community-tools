@@ -62,7 +62,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: Scp compose file to server
-        uses: appleboy/scp-action@latest
+        uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.PROD_SSH_DOMAIN }}
           username: ${{ secrets.PROD_SSH_DEPLOY_USER }}
