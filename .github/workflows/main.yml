@@ -81,21 +81,4 @@ jobs:
             echo "==Start login=="
             echo "${{secrets.ACCESS_PACKAGE_TOKEN}}" | sudo docker login ghcr.io -u ${{env.GITHUB_IDENTITY}} --password-stdin
             echo "==Compose up=="
-            sudo docker-compose -f ${{env.COMPOSE_FILE_PATH}}/docker-compose.yml up
-
-    # steps:
-    #   - uses: actions/checkout@v3
-    #   - name: SCP_COMPOSE_THEN_RUN_DEPLOY
-    #     uses: cross-the-world/ssh-scp-ssh-pipelines@latest
-    #     with:
-    #       host: ${{ secrets.PROD_SSH_DOMAIN }}
-    #       user: ${{ secrets.PROD_SSH_DEPLOY_USER }}
-    #       key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
-    #       scp: |-
-    #         ./docker-compose.yml => ${{env.COMPOSE_FILE_PATH}}
-    #       # https://docs.github.com/en/packages/learn-github-packages/introduction-to-github-packages#authenticating-to-github-packages
-    #       last_ssh: |-
-    #         echo "Start login"
-    #         echo "${{secrets.ACCESS_PACKAGE_TOKEN}}" | sudo docker login ghcr.io -u ${{env.GITHUB_IDENTITY}} --password-stdin
-    #         echo "Compose up"
-    #         sudo docker-compose -f ${{env.COMPOSE_FILE_PATH}}/docker-compose.yml up
+            sudo docker-compose -f ${{env.COMPOSE_FILE_PATH}}/docker-compose.yml up -d
