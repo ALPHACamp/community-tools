@@ -1,0 +1,11 @@
+version: "3.1"
+
+services:
+  app:
+    image: ghcr.io/alphacamp/community-tools:deploy
+    container_name: community-tool
+    restart: always
+    ports:
+      - "8080:8080"
+    volumes:
+      - "./data/logs/pm2:/app/.pm2/logs"
