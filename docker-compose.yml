@@ -2,10 +2,8 @@ version: "3.1"
 
 services:
   app:
-    # image: imageName
+    image: ghcr.io/alphacamp/community-tools:deploy
     container_name: community-tool
     restart: always
     ports:
-      - "80:8080"
-    depends_on:
-      - mongo
+      - "8080:8080"
