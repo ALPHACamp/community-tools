@@ -60,6 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-push-image
     steps:
+      - uses: actions/checkout@v3
       - name: SCP_COMPOSE_THEN_RUN_DEPLOY
         uses: cross-the-world/ssh-scp-ssh-pipelines@latest
         with:
