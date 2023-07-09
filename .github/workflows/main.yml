@@ -58,6 +58,7 @@ jobs:
   # need: docker@remote
   ssh-and-run-compose:
     runs-on: ubuntu-latest
+    needs: build-and-push-image
     steps:
       - name: SCP_COMPOSE_THEN_RUN_DEPLOY
         uses: cross-the-world/ssh-scp-ssh-pipelines@latest
@@ -65,10 +66,10 @@ jobs:
           host: ${{ secrets.PROD_SSH_DOMAIN }}
           user: ${{ secrets.PROD_SSH_DEPLOY_USER }}
           key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
-          scp: |
+          scp: |-
             ./docker-compose.yml => ${{env.COMPOSE_FILE_PATH}}
           # https://docs.github.com/en/packages/learn-github-packages/introduction-to-github-packages#authenticating-to-github-packages
-          last_ssh: |
+          last_ssh: |-
             echo "Start login"
             echo "${{secrets.ACCESS_PACKAGE_TOKEN}}" | sudo docker login ghcr.io -u ${{env.GITHUB_IDENTITY}} --password-stdin
             echo "Compose up"
