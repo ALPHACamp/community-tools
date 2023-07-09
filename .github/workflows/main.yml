@@ -24,7 +24,7 @@ jobs:
         uses: mobiledevops/secret-to-file-action@v1
         with:
           base64-encoded-secret: ${{ secrets.FIRESTORE_ACCOUNT }}
-          filename: "firestroe-service-account.json"
+          filename: "firestore-service-account.json"
           working-directory: "./creds"
       
       - name: Log in to the container registy
