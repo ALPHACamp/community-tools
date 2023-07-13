@@ -101,7 +101,7 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
         .setDescription(
           `太棒了！ 有人覺得這則在 <#${reaction.message.channelId}> 的 [訊息](https://discord.com/channels/${reaction.message.guildId}/${reaction.message.channelId}/${reaction.message.id}) 有幫助，並且送上了一個 🧡`
         )
-        .addFields({ name: '= require', value: `${user}`, inline: true })
+        .addFields({ name: '= From', value: `${user}`, inline: true })
         .addFields({
           name: 'To',
           value: `${reaction.message.author}`,
