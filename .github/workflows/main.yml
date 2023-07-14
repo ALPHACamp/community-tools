@@ -1,0 +1,90 @@
+name: Community-bot
+
+on:
+  push:
+    branches: ['main', 'deploy']
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  GITHUB_IDENTITY: tim80411
+  COMPOSE_FILE_PATH: /home/deploy
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Add Credentials
+        uses: mobiledevops/secret-to-file-action@v1
+        with:
+          base64-encoded-secret: ${{ secrets.FIRESTORE_ACCOUNT }}
+          filename: "firestore-service-account.json"
+          working-directory: "./creds"
+      
+      - name: Log in to the container registy
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            APP_ID=${{secrets.APP_ID}} 
+            DISCORD_TOKEN=${{secrets.DISCORD_TOKEN}} 
+            PUBLIC_KEY=${{secrets.PUBLIC_KEY}} 
+            DISCORD_GUILDID=${{secrets.DISCORD_GUILDID}} 
+            CHANNEL_ID=${{secrets.CHANNEL_ID}} 
+            PORT=${{secrets.PORT}}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  # need: docker@remote
+  ssh-and-run-compose:
+    runs-on: ubuntu-latest
+    needs: build-and-push-image
+    steps:
+      - uses: actions/checkout@v3
+      - name: Scp compose file to server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.PROD_SSH_DOMAIN }}
+          username: ${{ secrets.PROD_SSH_DEPLOY_USER }}
+          key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+          source: './docker-compose.yml'
+          target: ${{env.COMPOSE_FILE_PATH}}
+
+      # https://docs.github.com/en/packages/learn-github-packages/introduction-to-github-packages#authenticating-to-github-packages
+      - name: Ssh server and run docker-compose
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.PROD_SSH_DOMAIN }}
+          username: ${{ secrets.PROD_SSH_DEPLOY_USER }}
+          key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
+          script: |
+            echo "==Docker Login=="
+            echo "${{secrets.ACCESS_PACKAGE_TOKEN}}" | sudo docker login ${{env.REGISTRY}} -u ${{env.GITHUB_IDENTITY}} --password-stdin
+            echo "==Pull Image=="
+            sudo docker-compose -f ${{env.COMPOSE_FILE_PATH}}/docker-compose.yml pull
+            echo "==Compose Up=="
+            sudo docker-compose -f ${{env.COMPOSE_FILE_PATH}}/docker-compose.yml up -d
+            echo "==Docker Logout=="
+            sudo docker logout ${{env.REGISTRY}}
+            echo "==Clean Up Prune Image=="
+            sudo docker image prune -f
