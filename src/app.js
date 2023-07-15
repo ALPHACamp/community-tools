@@ -15,6 +15,8 @@ const {
 } = require('discord.js');
 const { db } = require('./config/db.js');
 const { FieldValue } = require('firebase-admin/firestore');
+const logger = require('./lib/logger.js');
+
 const fs = require('fs');
 const path = require('path');
 const client = new Client({
@@ -53,7 +55,7 @@ for (const file of commandFiles) {
   if ('data' in command && 'execute' in command) {
     client.commands.set(command.data.name, command);
   } else {
-    console.log(
+    logger.info(
       `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
     );
   }
@@ -66,7 +68,7 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
     try {
       await reaction.fetch();
     } catch (error) {
-      console.error('Something went wrong when fetching the message:', error);
+      logger.error('Something went wrong when fetching the message:', error);
       // Return as `reaction.message.author` may be undefined/null
       return;
     }
@@ -144,5 +146,5 @@ const apiRoutes = require('./routes/index');
 app.use('/api', cors(), apiRoutes);
 
 app.listen(process.env.PORT || 3306, () => {
-  console.log(`server is running on ${process.env.PORT || 3306}`);
+  logger.info(`server is running on ${process.env.PORT || 3306}`);
 });

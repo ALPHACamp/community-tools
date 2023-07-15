@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { db } = require('../config/db');
 const { pageSize } = require('../const.js');
+const logger = require('../lib/logger');
 
 function validate(req, res, next) {
   const { date, discordId, page } = req.query;
@@ -77,7 +78,7 @@ router.get('/leaderboard', validate, async function (req, res) {
       totalDataCount: totalDocsCount
     });
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     return res.status(500).json(err);
   }
 });
