@@ -11,7 +11,7 @@ env:
   COMPOSE_FILE_PATH: /home/deploy
 
 jobs:
-  build-and-push-image:
+  deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -43,6 +43,7 @@ jobs:
             type=raw,value=deploy
 
       - name: Build and push Docker image
+        id: build
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -57,12 +58,6 @@ jobs:
             PORT=${{secrets.PORT}}
           labels: ${{ steps.meta.outputs.labels }}
 
-  # need: docker@remote
-  ssh-and-run-compose:
-    runs-on: ubuntu-latest
-    needs: build-and-push-image
-    steps:
-      - uses: actions/checkout@v3
       - name: Scp compose file to server
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -90,3 +85,11 @@ jobs:
             sudo docker logout ${{env.REGISTRY}}
             echo "==Clean Up Prune Image=="
             sudo docker image prune -f
+          
+      # for saving money(limit: 500MB, [ref](https://docs.github.com/en/billing/managing-billing-for-github-packages/about-billing-for-github-packages))
+      - name: Delete Package Versions
+        uses: actions/delete-package-versions@v4.1.1
+        with:
+          package-name: ${{ github.event.repository.name }}
+          package-type: container
+          min-versions-to-keep: 2
