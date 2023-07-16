@@ -73,17 +73,21 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
 
   if (reaction.emoji.name === '🧡' && reaction.message.author !== user) {
     const date = new Date();
-    const yearAndMonth = date.toISOString().slice(0, 7);
-    const collectionName = `leaderboard-${yearAndMonth}`;
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const collectionName = `leaderboard-${year}`;
 
     await db.runTransaction(async (t) => {
       const ref = db
         .collection(collectionName)
-        .where('discordId', '=', reaction.message.author.id);
+        .where('discordId', '=', reaction.message.author.id)
+        .where('month', '==', month);
+
       const snapshot = await t.get(ref);
       if (snapshot.empty) {
-        t.set(db.collection(`leaderboard-${yearAndMonth}`).doc(), {
-          period: yearAndMonth,
+        t.set(db.collection(`leaderboard-${year}`).doc(), {
+          year,
+          month,
           discordId: reaction.message.author.id,
           point: 1
         });
@@ -122,11 +126,14 @@ client.on(Events.MessageReactionRemove, async (reaction, user) => {
   if (reaction.emoji.name === '🧡' && reaction.message.author !== user) {
     await db.runTransaction(async (t) => {
       const date = new Date();
-      const yearAndMonth = date.toISOString().slice(0, 7);
-      const collectionName = `leaderboard-${yearAndMonth}`;
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const collectionName = `leaderboard-${year}`;
+
       const ref = db
         .collection(collectionName)
-        .where('discordId', '=', reaction.message.author.id);
+        .where('discordId', '=', reaction.message.author.id)
+        .where('month', '==', month);
       const snapshot = await t.get(ref);
 
       !snapshot.empty &&
@@ -137,7 +144,6 @@ client.on(Events.MessageReactionRemove, async (reaction, user) => {
 
 // Log in to Discord with your client's token
 client.login(process.env.DISCORD_TOKEN);
-
 
 /**
  * API Server Execution
