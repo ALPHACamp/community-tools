@@ -13,7 +13,7 @@ if (process.env.NODE_ENV === 'dev') {
   const pretty = require('pino-pretty');
   const stream = pretty({
     colorize: true,
-    translateTime: 'yyyy-mm-dd HH:MM:ss',
+    translateTime: 'SYS:mm-dd HH:MM:ss',
   });
 
   pinoParams.push(stream);
