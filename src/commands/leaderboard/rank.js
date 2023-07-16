@@ -1,6 +1,8 @@
 require('dotenv').config();
 const { SlashCommandBuilder } = require('discord.js');
 const { db } = require('../../config/db.js');
+const logger = require('../../lib/logger.js');
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('rank')
@@ -46,6 +48,6 @@ async function queryUserRankAndPoint(discordId) {
 
     return { userRank, userPoint };
   } catch (error) {
-    console.error('查詢用戶排名時發生錯誤：', error);
+    logger.error('查詢用戶排名時發生錯誤：', error);
   }
 }

@@ -1,8 +1,5 @@
 // Require the necessary discord.js classes
 require('dotenv').config();
-const express = require('express');
-var cors = require('cors');
-const app = express();
 const { readdirSync } = require('node:fs');
 const { join } = require('node:path');
 const {
@@ -15,6 +12,8 @@ const {
 } = require('discord.js');
 const { db } = require('./config/db.js');
 const { FieldValue } = require('firebase-admin/firestore');
+const logger = require('./lib/logger.js');
+
 const fs = require('fs');
 const path = require('path');
 const client = new Client({
@@ -53,7 +52,7 @@ for (const file of commandFiles) {
   if ('data' in command && 'execute' in command) {
     client.commands.set(command.data.name, command);
   } else {
-    console.log(
+    logger.info(
       `[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`
     );
   }
@@ -66,7 +65,7 @@ client.on(Events.MessageReactionAdd, async (reaction, user) => {
     try {
       await reaction.fetch();
     } catch (error) {
-      console.error('Something went wrong when fetching the message:', error);
+      logger.error('Something went wrong when fetching the message:', error);
       // Return as `reaction.message.author` may be undefined/null
       return;
     }
@@ -139,10 +138,10 @@ client.on(Events.MessageReactionRemove, async (reaction, user) => {
 // Log in to Discord with your client's token
 client.login(process.env.DISCORD_TOKEN);
 
-const apiRoutes = require('./routes/index');
 
-app.use('/api', cors(), apiRoutes);
-
-app.listen(process.env.PORT || 3306, () => {
-  console.log(`server is running on ${process.env.PORT || 3306}`);
-});
+/**
+ * API Server Execution
+ */
+const ApiServer = require('./apiServer/apiServer.js');
+const server = new ApiServer(process.env.PORT || 3306);
+server.start();
