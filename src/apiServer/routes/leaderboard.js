@@ -54,11 +54,13 @@ router.get('/', validate, async function (req, res) {
 
   const fetchUserDetails = async (doc) => {
     const data = doc.data();
-    const discordUser = await client.users.fetch(data.discordId);
+    const guild = await client.guilds.fetch(process.env.DISCORD_GUILDID);
+    const member = await guild.members.fetch(data.discordId);
+
     return {
       id: doc.id,
-      name: discordUser.username,
-      avatarURL: discordUser.displayAvatarURL(),
+      name: member.nickname || member.user.username,
+      avatarURL: member.user.displayAvatarURL(),
       ...data
     };
   };
