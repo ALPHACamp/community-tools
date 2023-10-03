@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const Discord = require('discord.js');
+const { client } = require('../../config/discordClient.js');
 
 const { db } = require('../../config/db');
-const { pageSize } = require('../../const.js');
+const { defaultPageSize } = require('../../const.js');
 
 function validate(req, res, next) {
   const { year, month, discordId, page } = req.query;
@@ -29,7 +29,13 @@ function validate(req, res, next) {
 }
 
 router.get('/', validate, async function (req, res) {
-  const { year, month, discordId, page = 1 } = req.query;
+  const {
+    year,
+    month,
+    discordId,
+    page = 1,
+    pageSize = defaultPageSize
+  } = req.query;
   let ref = db
     .collection(`leaderboard-${year}`)
     .where('month', '=', Number(month));
@@ -42,17 +48,11 @@ router.get('/', validate, async function (req, res) {
   if (discordId) {
     ref = ref.where('discordId', '=', discordId);
   }
-
   const querySnapshot = await ref
     .orderBy('point', 'desc')
-    .limit(pageSize)
+    .limit(Number(pageSize))
     .offset(offset)
     .get();
-
-  const client = new Discord.Client({
-    intents: []
-  });
-  client.login(process.env.DISCORD_TOKEN);
 
   const fetchUserDetails = async (doc) => {
     const data = doc.data();
@@ -72,7 +72,7 @@ router.get('/', validate, async function (req, res) {
   return res.success({
     data: results,
     offset,
-    pageSize,
+    pageSize: Number(pageSize),
     totalPages,
     currentPage: Number(page),
     totalDataCount: totalDocsCount

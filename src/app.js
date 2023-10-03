@@ -48,6 +48,13 @@ client.on('ready', () => {
   console.log(`Logged in as ${client.user.tag}`);
   console.log(`Channels cached: ${client.channels.cache.size}`);
   require('./cronJob/index.js');
+  /**
+   * API Server Execution
+   */
+  const ApiServer = require('./apiServer/apiServer.js');
+
+  const server = new ApiServer(process.env.PORT || 3306);
+  server.start();
 });
 
 client.on(Events.MessageReactionAdd, async (reaction, user) => {
@@ -133,11 +140,3 @@ client.on(Events.MessageReactionRemove, async (reaction, user) => {
     });
   }
 });
-
-/**
- * API Server Execution
- */
-const ApiServer = require('./apiServer/apiServer.js');
-
-const server = new ApiServer(process.env.PORT || 3306);
-server.start();
