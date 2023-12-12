@@ -65,7 +65,7 @@ jobs:
           username: ${{ secrets.PROD_SSH_DEPLOY_USER }}
           key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
           source: './docker-compose.yml'
-          target: ${{env.COMPOSE_FILE_PATH}}
+          target: ${{ env.COMPOSE_FILE_PATH }}
 
       # https://docs.github.com/en/packages/learn-github-packages/introduction-to-github-packages#authenticating-to-github-packages
       - name: Ssh server and run docker-compose
@@ -76,15 +76,15 @@ jobs:
           key: ${{ secrets.PROD_SSH_PRIVATE_KEY }}
           script: |
             echo "==Docker Login=="
-            echo "${{secrets.ACCESS_PACKAGE_TOKEN}}" | sudo docker login ${{env.REGISTRY}} -u ${{env.GITHUB_IDENTITY}} --password-stdin
+            echo "${{secrets.ACCESS_PACKAGE_TOKEN}}" | docker login ${{env.REGISTRY}} -u ${{env.GITHUB_IDENTITY}} --password-stdin
             echo "==Pull Image=="
-            sudo docker-compose -f ${{env.COMPOSE_FILE_PATH}}/docker-compose.yml pull
+            docker-compose -f ${{env.COMPOSE_FILE_PATH}}/docker-compose.yml pull
             echo "==Compose Up=="
-            sudo docker-compose -f ${{env.COMPOSE_FILE_PATH}}/docker-compose.yml up -d
+            docker-compose -f ${{env.COMPOSE_FILE_PATH}}/docker-compose.yml up -d
             echo "==Docker Logout=="
-            sudo docker logout ${{env.REGISTRY}}
+            docker logout ${{env.REGISTRY}}
             echo "==Clean Up Prune Image=="
-            sudo docker image prune -f
+            docker image prune -f
           
       # for saving money(limit: 500MB, [ref](https://docs.github.com/en/billing/managing-billing-for-github-packages/about-billing-for-github-packages))
       - name: Delete Package Versions
