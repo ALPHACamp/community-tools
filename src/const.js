@@ -1,2 +1,2 @@
-const pageSize = 10;
-module.exports = { pageSize };
+const defaultPageSize = 10;
+module.exports = { defaultPageSize };
